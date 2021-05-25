@@ -3,11 +3,11 @@ package ru.javawebinar.topjava.util;
 import ru.javawebinar.topjava.model.UserMeal;
 import ru.javawebinar.topjava.model.UserMealWithExcess;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class UserMealsUtil {
     public static void main(String[] args) {
@@ -28,8 +28,32 @@ public class UserMealsUtil {
     }
 
     public static List<UserMealWithExcess> filteredByCycles(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
+        List<UserMealWithExcess> result = new ArrayList<>();
+        Map<LocalDate, Integer> tempDatesWithCalories = new TreeMap<>();
+
+        for (UserMeal um : meals) {
+            LocalDate date = um.getDateTime().toLocalDate();
+            tempDatesWithCalories.merge(date, um.getCalories(), Integer::sum);
+        }
+
+        for (UserMeal um : meals) {
+            LocalDate date = um.getDateTime().toLocalDate();
+            LocalTime time = um.getDateTime().toLocalTime();
+            if (time.compareTo(startTime) >= 0 && time.compareTo(endTime) < 0 && tempDatesWithCalories.get(date) > caloriesPerDay) {
+                UserMealWithExcess umwe = new UserMealWithExcess(um.getDateTime(), um.getDescription(), um.getCalories(), true);
+                result.add(umwe);
+            }
+            if (time.isAfter(startTime) && time.isBefore(endTime) && tempDatesWithCalories.get(date) <= caloriesPerDay) {
+                UserMealWithExcess umwe = new UserMealWithExcess(um.getDateTime(), um.getDescription(), um.getCalories(), false);
+                result.add(umwe);
+            }
+        }
+
+        return result;
+
+
         // TODO return filtered list with excess. Implement by cycles
-        return null;
+//        return null;
     }
 
     public static List<UserMealWithExcess> filteredByStreams(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
